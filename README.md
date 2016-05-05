@@ -7,7 +7,7 @@ Code I started writing at [Elmsinki meetup #2 at 2016-05-04](http://www.meetup.c
 I tried to do most of obvious cleanup but not sure what kind of refactorings should be done.
 Any feedback is very welcome.
 
-Runnable using `elm package install -y && elm reactor` from the working directory and going to <http://127.0.0.1:8000/index.html> or directly at <https://raw.githubusercontent.com/koivunej/elm-game-of-life/master/index.html>.
+Runnable using `elm package install -y && elm reactor` from the working directory and going to <http://127.0.0.1:8000/index.html> or directly at <https://koivunej.github.io/elm-game-of-life/index.html>.
 
 After writing this I remembered to google on the topic and there is at least one blog post/tutorial related to elm and game of life: <http://sonnym.github.io/2014/05/05/writing-game-of-life-in-elm/>.
 I did not however follow it at all.
