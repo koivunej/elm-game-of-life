@@ -21,9 +21,10 @@ type SimulationMode
     = Manual
     | Automatic
 
+-- TODO: simulationState should be part of SimulationMode
 type alias Model =
     { world : Matrix.Matrix State
-    , seed : Random.Seed
+    , seed : Int
     , mode : SimulationMode
     , simulationState : SimulationState
     , round : Int
@@ -38,15 +39,15 @@ duration = (1 / 5) * Time.second
 
 init : (Model, Effects Action)
 init =
-    (initialModel, Effects.none)
+    (initialModel 42, Effects.none)
 
-initialModel : Model
-initialModel =
+initialModel : Int -> Model
+initialModel s =
     let
-        seed = Random.initialSeed 42
+        seed = Random.initialSeed s
     in
        { world = generateRandomWorld seed
-       , seed = seed
+       , seed = s
        , mode = Manual
        , round = 0
        , simulationState = Nothing
