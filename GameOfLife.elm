@@ -63,7 +63,9 @@ view address m =
 
 stepOneButton address model =
     Html.button
-        [ Html.Events.onClick address StepOne ]
+        [ Html.Events.onClick address StepOne
+        , Html.Attributes.disabled (model.mode /= Manual)
+        ]
         [ Html.text "Step" ]
 
 simulationButton address model =
@@ -73,7 +75,9 @@ simulationButton address model =
             Automatic _ -> (Stop, "Stop")
     in
         Html.button
-            [ Html.Events.onClick address action, Html.Attributes.disabled True ]
+            [ Html.Events.onClick address action
+            , Html.Attributes.disabled True
+            ]
             [ Html.text text ]
 
 
