@@ -24,7 +24,7 @@ type alias Model =
     , mode : SimulationMode
     }
 
-type Action = StepOne | Start
+type Action = StepOne | Start | Stop
 
 initialModel =
     let
@@ -60,9 +60,15 @@ stepOneButton address model =
         [ Html.text "Step" ]
 
 simulationButton address model =
-    Html.button
-        [ Html.Events.onClick address Start, Html.Attributes.disabled True ]
-        [ Html.text "Start" ]
+    let
+        (action, text) = case model.mode of
+            Manual -> (Start, "Start")
+            Automatic _ -> (Stop, "Stop")
+    in
+        Html.button
+            [ Html.Events.onClick address action, Html.Attributes.disabled True ]
+            [ Html.text text ]
+
 
 update : Action -> Model -> Model
 update _ m =
