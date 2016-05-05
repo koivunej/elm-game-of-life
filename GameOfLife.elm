@@ -141,16 +141,8 @@ update action m =
         next =
           step m.world
 
-        mode =
-          case m.mode of
-            Automatic ->
-              Automatic
-
-            _ ->
-              m.mode
-
         continuingModel =
-          { m | world = next, previousWorld = Just m.world, round = m.round + 1, mode = mode }
+          { m | world = next, previousWorld = Just m.world, round = m.round + 1 }
       in
         case m.previousWorld of
           Nothing ->
