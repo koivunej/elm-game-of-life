@@ -1,7 +1,7 @@
 module GameOfLife (..) where
 
 import Html exposing (Html)
-import Html.Attributes
+import Html.Attributes exposing (min, max, value, type')
 import Html.Events
 import Matrix
 import Matrix.Random as RandomMatrix
@@ -12,6 +12,7 @@ import Task
 import Time exposing (Time)
 import Random
 import Debug
+import ParseInt exposing (parseInt)
 
 import Types exposing (..)
 import Game exposing (step)
@@ -28,9 +29,17 @@ type alias Model =
     , mode : SimulationMode
     , simulationState : SimulationState
     , round : Int
+    , seedInput : Maybe Int
     }
 
-type Action = StepOne | Start | Stop | Tick Time
+type Action
+    = StepOne
+    | Start
+    | Stop
+    | Tick Time
+    | ResetToSeed Int
+    | Reset
+    | SeedInputChanged String
 
 type alias SimulationState =
     Maybe { previousClock : Time, elapsedSince : Time }
@@ -51,6 +60,7 @@ initialModel s =
        , mode = Manual
        , round = 0
        , simulationState = Nothing
+       , seedInput = Nothing
        }
 
 generateRandomWorld initialSeed =
@@ -75,6 +85,14 @@ view address m =
         , gameView m.world
         , stepOneButton address m
         , simulationButton address m
+        , Html.hr [] []
+        , Html.button [ Html.Events.onClick address Reset ] [ Html.text "Reset" ]
+        , Html.input
+            [ (type' "number")
+            , (value (toString (Maybe.withDefault m.seed m.seedInput)))
+            , Html.Events.on "input" Html.Events.targetValue (\input -> Signal.message address (SeedInputChanged input))
+            ] [ ]
+
         ]
 
 stepOneButton address model =
@@ -117,6 +135,14 @@ update action m =
                            ( { m | simulationState = Just { previousClock = t, elapsedSince = dt} }
                            , Effects.tick Tick
                            )
+        SeedInputChanged s -> ({ m | seedInput = (Result.toMaybe (parseInt s))}, Effects.none)
+        Reset ->
+            let
+                fresh = initialModel (Maybe.withDefault m.seed m.seedInput)
+                defaultEffects = if m.mode == Manual then Effects.none else Effects.tick Tick
+            in
+                ( { fresh | mode = m.mode }, defaultEffects)
+        _ -> (m, Effects.none)
 
 app =
     StartApp.start { init = init
