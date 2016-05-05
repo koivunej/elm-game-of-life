@@ -1,0 +1,15 @@
+# swap
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+# session
+Session.vim
+# temporary
+.netrwhist
+*~
+# auto-generated tag files
+tags
+
+# elm-package generated files
+elm-stuff/
+# elm-repl generated files
+repl-temp-*
