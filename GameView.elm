@@ -1,4 +1,4 @@
-module GameView (..) where
+module GameView (gameView) where
 
 import Html exposing (Html, Attribute)
 import Html.Attributes exposing (class, style)

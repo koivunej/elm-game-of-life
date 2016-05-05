@@ -48,9 +48,8 @@ neighbours loc matrix =
 
 wrappedOffset : Matrix.Matrix a -> Matrix.Location -> Matrix.Location -> Matrix.Location
 wrappedOffset m offset original =
-    (
-        wrapAround (Matrix.rowCount m) (Matrix.row original) (Matrix.row offset),
-        wrapAround (Matrix.colCount m) (Matrix.col original) (Matrix.col offset)
+    ( wrapAround (Matrix.rowCount m) (Matrix.row original) (Matrix.row offset)
+    , wrapAround (Matrix.colCount m) (Matrix.col original) (Matrix.col offset)
     )
 
 wrapAround : Int -> Int -> Int -> Int
