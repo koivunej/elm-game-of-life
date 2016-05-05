@@ -9,39 +9,38 @@ step m =
     Matrix.mapWithLocation (stepLocation m) m
 
 stepLocation : Matrix.Matrix State -> Matrix.Location -> State -> State
-stepLocation m loc current =
+stepLocation matrix location current =
     let
-        neighs = neighbours loc m
+        neighs = neighbours location matrix
     in
         stepByNeighbors current neighs
 
 stepByNeighbors : State -> List State -> State
 stepByNeighbors state neighs =
     let
-        alive = List.length (List.filter (\m -> m == Alive) neighs)
+        living = List.length (List.filter (\m -> m == Alive) neighs)
     in
        if state == Alive then
-          if alive < 2 then
-            Dead
-          else if alive == 2 || alive == 3 then
-            Alive
+          if living == 2 || living == 3 then
+            Alive -- healthy community
           else
-            Dead
-       else if alive == 3 then
-          Alive
+            Dead  -- over or underpopulation
+       else if living == 3 then
+          Alive   -- reproduction
        else
-          Dead
+          Dead    -- dead stay dead
+
 
 neighbours : Matrix.Location -> Matrix.Matrix a -> List a
 neighbours loc matrix =
-    [ (-1, 0)
-    , (-1, 1)
-    , (0, 1)
-    , (1, 1)
-    , (1, 0)
-    , (1, -1)
-    , (0, -1)
-    , (-1, -1)
+    [ (-1, 0)  -- above
+    , (-1, 1)  -- above right
+    , (0, 1)   -- right
+    , (1, 1)   -- below right
+    , (1, 0)   -- below
+    , (1, -1)  -- below left
+    , (0, -1)  -- left
+    , (-1, -1) -- above left
     ]
         |> List.map (wrappedOffset matrix loc)
         |> List.map (\loc -> Matrix.get loc matrix)
