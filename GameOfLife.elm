@@ -1,6 +1,7 @@
 module GameOfLife (..) where
 
 import Html exposing (Html)
+import Html.Attributes
 import Html.Events
 import Matrix
 import Matrix.Random as RandomMatrix
@@ -23,7 +24,7 @@ type alias Model =
     , mode : SimulationMode
     }
 
-type Action = StepOne
+type Action = StepOne | Start
 
 initialModel =
     let
@@ -49,11 +50,19 @@ view address m =
     Html.div
         []
         [ gameView m.world
-        , Html.button
-            [ Html.Events.onClick address StepOne ]
-            [ Html.text "Step" ]
+        , stepOneButton address m
+        , simulationButton address m
         ]
 
+stepOneButton address model =
+    Html.button
+        [ Html.Events.onClick address StepOne ]
+        [ Html.text "Step" ]
+
+simulationButton address model =
+    Html.button
+        [ Html.Events.onClick address Start, Html.Attributes.disabled True ]
+        [ Html.text "Start" ]
 
 update : Action -> Model -> Model
 update _ m =
