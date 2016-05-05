@@ -1,0 +1,7 @@
+.gol-map { border: 1px solid black; }
+
+.gol-map td { width: 1em; height: 1em; }
+
+.gol-alive { background-color: green; }
+
+.gol-dead { }

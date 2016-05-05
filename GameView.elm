@@ -1,7 +1,7 @@
 module GameView (gameView) where
 
 import Html exposing (Html, Attribute)
-import Html.Attributes exposing (style)
+import Html.Attributes exposing (class, style)
 import Matrix exposing (..)
 import Types exposing (..)
 import Array exposing (..)
@@ -10,7 +10,7 @@ import Array exposing (..)
 gameView : Matrix State -> Html
 gameView world =
   Html.table
-    []
+    [ class "gol-map" ]
     [ Html.tbody
         []
         (Array.toList (Array.map row world))
@@ -31,7 +31,7 @@ cellStyle : State -> Attribute
 cellStyle s =
   case s of
     Alive ->
-      style [ ( "width", "1em" ), ( "height", "1em" ), ( "background-color", "green" ) ]
+      class "gol-alive"
 
     Dead ->
-      style [ ( "width", "1em" ), ( "height", "1em" ), ( "background-color", "white" ) ]
+      class "gol-dead"
