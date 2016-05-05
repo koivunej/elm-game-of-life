@@ -97,8 +97,9 @@ simulationButton address model =
 update : Action -> Model -> (Model, Effects Action)
 update action m =
     case action of
-        StepOne -> ({ m | world = step m.world, round = m.round + 1 }, Effects.none)
+        StepOne -> ({ m | world = step m.world, round = m.round + 1, simulationState = Nothing }, Effects.tick Tick)
         Start   -> ({ m | mode = Automatic }, Effects.tick Tick)
+        Stop    -> ({ m | mode = Manual, simulationState = Nothing }, Effects.none)
         Tick t  ->
             case m.mode of
                 Manual    -> (m, Effects.none)
@@ -109,14 +110,12 @@ update action m =
                             Just { previousClock, elapsedSince } -> elapsedSince + (t - previousClock)
                     in
                        if dt >= duration then
-                           ( { m | simulationState = Just { previousClock = t, elapsedSince = 0 }, world = step m.world, round = m.round + 1 }
-                           , Effects.tick Tick
-                           )
+                          -- just trigger a StepOne since we have awaited enough
+                           ( m, Effects.task (Task.succeed StepOne) )
                        else
                            ( { m | simulationState = Just { previousClock = t, elapsedSince = dt} }
                            , Effects.tick Tick
                            )
-        Stop    -> ({ m | mode = Manual, simulationState = Nothing }, Effects.none)
 
 app =
     StartApp.start { init = init
