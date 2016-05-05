@@ -1,7 +1,7 @@
 module GameView (gameView) where
 
 import Html exposing (Html, Attribute)
-import Html.Attributes exposing (class, style)
+import Html.Attributes exposing (style)
 import Matrix exposing (..)
 import Types exposing (..)
 import Array exposing (..)

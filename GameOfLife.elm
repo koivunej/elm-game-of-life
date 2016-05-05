@@ -1,7 +1,7 @@
 module GameOfLife (..) where
 
 import Html exposing (Html)
-import Html.Attributes exposing (min, max, value, type')
+import Html.Attributes exposing (value, type')
 import Html.Events
 import Matrix
 import Matrix.Random as RandomMatrix
@@ -11,9 +11,8 @@ import Effects exposing (Effects)
 import Task
 import Time exposing (Time)
 import Random
-import Debug
 import ParseInt exposing (parseInt)
-import Types exposing (..)
+import Types exposing (State(..))
 import Game exposing (step)
 import GameView exposing (gameView)
 
