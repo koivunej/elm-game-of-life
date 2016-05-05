@@ -95,7 +95,6 @@ view address m =
             , (value (toString (Maybe.withDefault m.seed m.seedInput)))
             , Html.Events.on "input" Html.Events.targetValue (\input -> Signal.message address (SeedInputChanged input))
             ] [ ]
-
         ]
 
 stepOneButton address model =

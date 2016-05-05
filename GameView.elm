@@ -19,9 +19,6 @@ row : Array State -> Html
 row r =
     Html.tr [] (Array.toList (Array.map cell r))
 
-rowStyle =
-    style [  ]
-
 cell : State -> Html
 cell c =
     Html.td [ cellStyle c ] [ Html.text " " ]
