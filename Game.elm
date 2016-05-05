@@ -29,7 +29,7 @@ stepByNeighbors state neighs =
        else if alive == 3 then
           Alive
        else
-          Dead -- debug.die tms
+          Dead
 
 neighbours : Matrix.Location -> Matrix.Matrix a -> List (Maybe a)
 neighbours loc matrix =
