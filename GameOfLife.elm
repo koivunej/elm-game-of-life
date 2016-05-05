@@ -46,7 +46,7 @@ type Action
 type alias SimulationState =
     Maybe { previousClock : Time, elapsedSince : Time }
 
-duration = (1 / 5) * Time.second
+duration = 0 -- (1 / 5) * Time.second
 
 init : (Model, Effects Action)
 init =
