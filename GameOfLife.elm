@@ -20,11 +20,8 @@ import GameView exposing (gameView)
 
 type SimulationMode
     = Manual
-    | Automatic SimulationState
+    | Automatic
     | Complete
-
-type alias SimulationState =
-    Maybe { previousClock : Time, elapsedSince : Time }
 
 type alias Model =
     { world : Matrix.Matrix State
@@ -43,8 +40,6 @@ type Action
     | ResetToSeed Int
     | Reset
     | SeedInputChanged String
-
-duration = 0 -- (1 / 5) * Time.second
 
 init : (Model, Effects Action)
 init =
@@ -124,7 +119,7 @@ update action m =
                 next = step m.world
                 mode =
                     case m.mode of
-                        Automatic _ -> Automatic Nothing
+                        Automatic -> Automatic
                         _ -> m.mode
                 continuingModel = { m | world = next, previousWorld = Just m.world, round = m.round + 1, mode = mode }
             in
@@ -136,25 +131,13 @@ update action m =
                      else
                         ({ m | mode = Complete }, Effects.none)
 
-        Start   -> ({ m | mode = Automatic Nothing }, Effects.tick Tick)
+        Start   -> ({ m | mode = Automatic }, Effects.tick Tick)
 
         Stop    -> ({ m | mode = Manual }, Effects.none)
 
         Tick t  ->
             case m.mode of
-                Automatic s ->
-                    let
-                        dt = case s of
-                            Nothing -> 0
-                            Just { previousClock, elapsedSince } -> elapsedSince + (t - previousClock)
-                    in
-                       if dt >= duration then
-                          -- just trigger a StepOne since we have awaited enough
-                           ( m, Effects.task (Task.succeed StepOne) )
-                       else
-                           ( { m | mode = Automatic (Just { previousClock = t, elapsedSince = dt}) }
-                           , Effects.tick Tick
-                           )
+                Automatic -> ( m, Effects.task (Task.succeed StepOne) )
                 _ -> (m, Effects.none)
 
         SeedInputChanged s -> ({ m | seedInput = (Result.toMaybe (parseInt s))}, Effects.none)
