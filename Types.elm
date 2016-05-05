@@ -1,3 +1,6 @@
 module Types (..) where
 
-type State = Alive | Dead
+
+type State
+  = Alive
+  | Dead

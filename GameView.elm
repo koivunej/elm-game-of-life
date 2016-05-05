@@ -6,26 +6,32 @@ import Matrix exposing (..)
 import Types exposing (..)
 import Array exposing (..)
 
+
 gameView : Matrix State -> Html
 gameView world =
-    Html.table
+  Html.table
+    []
+    [ Html.tbody
         []
-        [ Html.tbody
-            []
-            (Array.toList (Array.map row world))
-        ]
+        (Array.toList (Array.map row world))
+    ]
+
 
 row : Array State -> Html
 row r =
-    Html.tr [] (Array.toList (Array.map cell r))
+  Html.tr [] (Array.toList (Array.map cell r))
+
 
 cell : State -> Html
 cell c =
-    Html.td [ cellStyle c ] [ Html.text " " ]
+  Html.td [ cellStyle c ] [ Html.text " " ]
+
 
 cellStyle : State -> Attribute
 cellStyle s =
-    case s of
-        Alive -> style [ ("width", "1em"), ("height", "1em"), ("background-color", "green") ]
-        Dead  -> style [ ("width", "1em"), ("height", "1em"), ("background-color", "white") ]
+  case s of
+    Alive ->
+      style [ ( "width", "1em" ), ( "height", "1em" ), ( "background-color", "green" ) ]
 
+    Dead ->
+      style [ ( "width", "1em" ), ( "height", "1em" ), ( "background-color", "white" ) ]
