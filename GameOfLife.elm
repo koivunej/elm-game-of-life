@@ -6,7 +6,8 @@ import Html.Events
 import Matrix
 import Matrix.Random as RandomMatrix
 import Array exposing (Array)
-import StartApp.Simple
+import StartApp
+import Effects exposing (Effects)
 import Time
 import Random
 
@@ -16,7 +17,7 @@ import GameView exposing (gameView)
 
 type SimulationMode
     = Manual
-    | Automatic Int -- speed?
+    | Automatic
 
 type alias Model =
     { world : Matrix.Matrix State
@@ -27,6 +28,12 @@ type alias Model =
 
 type Action = StepOne | Start | Stop
 
+
+init : (Model, Effects Action)
+init =
+    (initialModel, Effects.none)
+
+initialModel : Model
 initialModel =
     let
         seed = Random.initialSeed 42
@@ -71,8 +78,8 @@ stepOneButton address model =
 simulationButton address model =
     let
         (action, text) = case model.mode of
-            Manual -> (Start, "Start")
-            Automatic _ -> (Stop, "Stop")
+            Manual    -> (Start, "Start")
+            Automatic -> (Stop, "Stop")
     in
         Html.button
             [ Html.Events.onClick address action
@@ -80,15 +87,20 @@ simulationButton address model =
             ]
             [ Html.text text ]
 
+update : Action -> Model -> (Model, Effects Action)
+update action m =
+    case action of
+        StepOne -> ({ m | world = step m.world, round = m.round + 1 }, Effects.none)
+        Start   -> ({ m | mode = Automatic }, Effects.none)
+        Stop    -> ({ m | mode = Manual }, Effects.none)
 
-update : Action -> Model -> Model
-update _ m =
-    { m | world = step m.world, round = m.round + 1 }
+app =
+    StartApp.start { init = init
+                   , update = update
+                   , view = view
+                   , inputs = [ ]
+                   }
 
 main : Signal.Signal Html
 main =
-    StartApp.Simple.start
-        { model = initialModel
-        , view = view
-        , update = update
-        }
+    app.html
