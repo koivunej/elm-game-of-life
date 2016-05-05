@@ -30,5 +30,5 @@ cellStyle : State -> Attribute
 cellStyle s =
     case s of
         Alive -> style [ ("width", "1em"), ("height", "1em"), ("background-color", "green") ]
-        Dead  -> style [ ("width", "1em"), ("height", "1em"), ("background-color", "gray") ]
+        Dead  -> style [ ("width", "1em"), ("height", "1em"), ("background-color", "white") ]
 
