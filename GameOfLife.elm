@@ -8,8 +8,10 @@ import Matrix.Random as RandomMatrix
 import Array exposing (Array)
 import StartApp
 import Effects exposing (Effects)
-import Time
+import Task
+import Time exposing (Time)
 import Random
+import Debug
 
 import Types exposing (..)
 import Game exposing (step)
@@ -23,11 +25,16 @@ type alias Model =
     { world : Matrix.Matrix State
     , seed : Random.Seed
     , mode : SimulationMode
+    , simulationState : SimulationState
     , round : Int
     }
 
-type Action = StepOne | Start | Stop
+type Action = StepOne | Start | Stop | Tick Time
 
+type alias SimulationState =
+    Maybe { previousClock : Time, elapsedSince : Time }
+
+duration = (1 / 5) * Time.second
 
 init : (Model, Effects Action)
 init =
@@ -42,6 +49,7 @@ initialModel =
        , seed = seed
        , mode = Manual
        , round = 0
+       , simulationState = Nothing
        }
 
 generateRandomWorld initialSeed =
@@ -83,7 +91,6 @@ simulationButton address model =
     in
         Html.button
             [ Html.Events.onClick address action
-            , Html.Attributes.disabled True
             ]
             [ Html.text text ]
 
@@ -91,8 +98,25 @@ update : Action -> Model -> (Model, Effects Action)
 update action m =
     case action of
         StepOne -> ({ m | world = step m.world, round = m.round + 1 }, Effects.none)
-        Start   -> ({ m | mode = Automatic }, Effects.none)
-        Stop    -> ({ m | mode = Manual }, Effects.none)
+        Start   -> ({ m | mode = Automatic }, Effects.tick Tick)
+        Tick t  ->
+            case m.mode of
+                Manual    -> (m, Effects.none)
+                Automatic ->
+                    let
+                        dt = case m.simulationState of
+                            Nothing -> 0
+                            Just { previousClock, elapsedSince } -> elapsedSince + (t - previousClock)
+                    in
+                       if dt >= duration then
+                           ( { m | simulationState = Just { previousClock = t, elapsedSince = 0 }, world = step m.world, round = m.round + 1 }
+                           , Effects.tick Tick
+                           )
+                       else
+                           ( { m | simulationState = Just { previousClock = t, elapsedSince = dt} }
+                           , Effects.tick Tick
+                           )
+        Stop    -> ({ m | mode = Manual, simulationState = Nothing }, Effects.none)
 
 app =
     StartApp.start { init = init
@@ -100,6 +124,10 @@ app =
                    , view = view
                    , inputs = [ ]
                    }
+
+port tasks : Signal.Signal (Task.Task Effects.Never ())
+port tasks =
+    app.tasks
 
 main : Signal.Signal Html
 main =
