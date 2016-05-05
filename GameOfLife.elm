@@ -13,17 +13,36 @@ import Types exposing (..)
 import Game exposing (step)
 import GameView exposing (gameView)
 
-type alias Model =
-    { world : Matrix.Matrix State }
+type SimulationMode
+    = Manual
+    | Automatic Int -- speed?
 
-type Action = Step
+type alias Model =
+    { world : Matrix.Matrix State
+    , seed : Random.Seed
+    , mode : SimulationMode
+    }
+
+type Action = StepOne
 
 initialModel =
-    { world = fst
+    let
+        seed = Random.initialSeed 42
+    in
+       { world = generateRandomWorld seed
+       , seed = seed
+       , mode = Manual
+       }
+
+generateRandomWorld initialSeed =
+    fst
         <| Random.generate
-            (RandomMatrix.matrix (Random.int 25 25) (Random.int 25 25) (Random.map (\b -> if b then Alive else Dead) Random.bool))
-            (Random.initialSeed 42)
-    }
+            (RandomMatrix.matrix
+                (Random.int 25 25)
+                (Random.int 25 25)
+                (Random.map (\b -> if b then Alive else Dead) Random.bool))
+            initialSeed
+
 
 view : Signal.Address Action -> Model -> Html
 view address m =
@@ -31,7 +50,7 @@ view address m =
         []
         [ gameView m.world
         , Html.button
-            [ Html.Events.onClick address Step ]
+            [ Html.Events.onClick address StepOne ]
             [ Html.text "Step" ]
         ]
 
