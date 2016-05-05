@@ -20,16 +20,17 @@ import GameView exposing (gameView)
 
 type SimulationMode
     = Manual
-    | Automatic
+    | Automatic SimulationState
     | Complete
 
--- TODO: simulationState should be part of SimulationMode
+type alias SimulationState =
+    Maybe { previousClock : Time, elapsedSince : Time }
+
 type alias Model =
     { world : Matrix.Matrix State
     , previousWorld : Maybe (Matrix.Matrix State)
     , seed : Int
     , mode : SimulationMode
-    , simulationState : SimulationState
     , round : Int
     , seedInput : Maybe Int
     }
@@ -42,9 +43,6 @@ type Action
     | ResetToSeed Int
     | Reset
     | SeedInputChanged String
-
-type alias SimulationState =
-    Maybe { previousClock : Time, elapsedSince : Time }
 
 duration = 0 -- (1 / 5) * Time.second
 
@@ -62,7 +60,6 @@ initialModel s =
        , seed = s
        , mode = Manual
        , round = 0
-       , simulationState = Nothing
        , seedInput = Nothing
        }
 
@@ -125,7 +122,11 @@ update action m =
             -- this stops if the world has stabilized into flickering or fully stopped
             let
                 next = step m.world
-                continuingModel = { m | world = next, previousWorld = Just m.world, round = m.round + 1, simulationState = Nothing }
+                mode =
+                    case m.mode of
+                        Automatic _ -> Automatic Nothing
+                        _ -> m.mode
+                continuingModel = { m | world = next, previousWorld = Just m.world, round = m.round + 1, mode = mode }
             in
                case m.previousWorld of
                  Nothing -> (continuingModel, Effects.tick Tick)
@@ -133,17 +134,17 @@ update action m =
                      if prev /= next then
                         (continuingModel, Effects.tick Tick)
                      else
-                        ({ m | simulationState = Nothing, mode = Complete }, Effects.none)
+                        ({ m | mode = Complete }, Effects.none)
 
-        Start   -> ({ m | mode = Automatic }, Effects.tick Tick)
+        Start   -> ({ m | mode = Automatic Nothing }, Effects.tick Tick)
 
-        Stop    -> ({ m | mode = Manual, simulationState = Nothing }, Effects.none)
+        Stop    -> ({ m | mode = Manual }, Effects.none)
 
         Tick t  ->
             case m.mode of
-                Automatic ->
+                Automatic s ->
                     let
-                        dt = case m.simulationState of
+                        dt = case s of
                             Nothing -> 0
                             Just { previousClock, elapsedSince } -> elapsedSince + (t - previousClock)
                     in
@@ -151,20 +152,26 @@ update action m =
                           -- just trigger a StepOne since we have awaited enough
                            ( m, Effects.task (Task.succeed StepOne) )
                        else
-                           ( { m | simulationState = Just { previousClock = t, elapsedSince = dt} }
+                           ( { m | mode = Automatic (Just { previousClock = t, elapsedSince = dt}) }
                            , Effects.tick Tick
                            )
-                _         -> (m, Effects.none)
+                _ -> (m, Effects.none)
 
         SeedInputChanged s -> ({ m | seedInput = (Result.toMaybe (parseInt s))}, Effects.none)
 
         Reset ->
             let
                 fresh = initialModel (Maybe.withDefault m.seed m.seedInput)
-                mode = if m.mode /= Complete then m.mode else Manual
-                defaultEffects = if mode == Manual then Effects.none else Effects.tick Tick
+                mode =
+                    if m.mode /= Complete
+                    then m.mode
+                    else Manual
+                fx =
+                    if mode == Manual
+                    then Effects.none
+                    else Effects.tick Tick
             in
-                ( { fresh | mode = mode }, defaultEffects)
+                ({ fresh | mode = mode }, fx)
 
         _ -> (m, Effects.none)
 
