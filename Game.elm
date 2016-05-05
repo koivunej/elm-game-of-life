@@ -1,7 +1,8 @@
-module Game (..) where
+module Game (step) where
 
 import Matrix
 import Types exposing (..)
+import Debug exposing (crash)
 
 step : Matrix.Matrix State -> Matrix.Matrix State
 step m =
@@ -10,7 +11,7 @@ step m =
 stepLocation : Matrix.Matrix State -> Matrix.Location -> State -> State
 stepLocation m loc current =
     let
-        neighs = List.map (\m -> Maybe.withDefault Dead m) (neighbours loc m)
+        neighs = neighbours loc m
     in
         stepByNeighbors current neighs
 
@@ -31,27 +32,30 @@ stepByNeighbors state neighs =
        else
           Dead
 
-neighbours : Matrix.Location -> Matrix.Matrix a -> List (Maybe a)
+neighbours : Matrix.Location -> Matrix.Matrix a -> List a
 neighbours loc matrix =
-    [ Matrix.get (wrappedOffset matrix loc (-1, 0)) matrix
-    , Matrix.get (wrappedOffset matrix loc (-1, 1)) matrix
-    , Matrix.get (wrappedOffset matrix loc (0, 1)) matrix
-    , Matrix.get (wrappedOffset matrix loc (1, 1)) matrix
-    , Matrix.get (wrappedOffset matrix loc (1, 0)) matrix
-    , Matrix.get (wrappedOffset matrix loc (1, -1)) matrix
-    , Matrix.get (wrappedOffset matrix loc (0, -1)) matrix
-    , Matrix.get (wrappedOffset matrix loc (-1, -1)) matrix
+    [ (-1, 0)
+    , (-1, 1)
+    , (0, 1)
+    , (1, 1)
+    , (1, 0)
+    , (1, -1)
+    , (0, -1)
+    , (-1, -1)
     ]
+        |> List.map (wrappedOffset matrix loc)
+        |> List.map (\loc -> Matrix.get loc matrix)
+        |> List.map unwrap
 
 wrappedOffset : Matrix.Matrix a -> Matrix.Location -> Matrix.Location -> Matrix.Location
 wrappedOffset m offset original =
     (
-        wrap (Matrix.rowCount m) (Matrix.row original) (Matrix.row offset),
-        wrap (Matrix.colCount m) (Matrix.col original) (Matrix.col offset)
+        wrapAround (Matrix.rowCount m) (Matrix.row original) (Matrix.row offset),
+        wrapAround (Matrix.colCount m) (Matrix.col original) (Matrix.col offset)
     )
 
-wrap : Int -> Int -> Int -> Int
-wrap limit value offset =
+wrapAround : Int -> Int -> Int -> Int
+wrapAround limit value offset =
     let
         off = (value + offset) % limit
     in
@@ -59,3 +63,9 @@ wrap limit value offset =
           limit + off
        else
           off % limit
+
+unwrap : Maybe a -> a
+unwrap maybe =
+    case maybe of
+        Just a -> a
+        Nothing -> (Debug.crash "Invalid coordinates resulted in Nothing")
