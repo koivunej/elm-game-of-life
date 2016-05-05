@@ -100,7 +100,7 @@ simulationButton address model =
     let
         (action, text) = case model.mode of
             Manual    -> (Start, "Start")
-            _ -> (Stop, "Stop")
+            _         -> (Stop, "Stop")
     in
         Html.button
             [ Html.Events.onClick address action
@@ -120,7 +120,7 @@ update action m =
                 mode =
                     case m.mode of
                         Automatic -> Automatic
-                        _ -> m.mode
+                        _         -> m.mode
                 continuingModel = { m | world = next, previousWorld = Just m.world, round = m.round + 1, mode = mode }
             in
                case m.previousWorld of
@@ -135,10 +135,10 @@ update action m =
 
         Stop    -> ({ m | mode = Manual }, Effects.none)
 
-        Tick t  ->
+        Tick _  ->
             case m.mode of
-                Automatic -> ( m, Effects.task (Task.succeed StepOne) )
-                _ -> (m, Effects.none)
+                Automatic -> (m, Effects.task (Task.succeed StepOne))
+                _         -> (m, Effects.none)
 
         SeedInputChanged s -> ({ m | seedInput = (Result.toMaybe (parseInt s))}, Effects.none)
 
