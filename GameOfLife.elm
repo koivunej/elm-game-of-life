@@ -37,7 +37,6 @@ type Action
     | Start
     | Stop
     | Tick Time
-    | ResetToSeed Int
     | Reset
     | SeedInputChanged String
 
@@ -155,8 +154,6 @@ update action m =
                     else Effects.tick Tick
             in
                 ({ fresh | mode = mode }, fx)
-
-        _ -> (m, Effects.none)
 
 app =
     StartApp.start { init = init
