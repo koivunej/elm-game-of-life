@@ -141,22 +141,7 @@ update action m =
         -- note here we compare the new calculated to the one we had before
         -- before we had A, current is B, and we check if A == C, where C = step B
         -- this stops if the world has stabilized into flickering or fully stopped
-        let
-          next =
-            step m.world
-
-          continuingModel =
-            { m | world = next, previousWorld = Just m.world, round = m.round + 1 }
-        in
-          case m.previousWorld of
-            Nothing ->
-              ( continuingModel, noCmd )
-
-            Just prev ->
-              if prev /= next then
-                ( continuingModel, noCmd )
-              else
-                ( { m | mode = Complete }, noCmd )
+        ( stepOne m, noCmd )
 
       Start ->
         ( { m | mode = Automatic }, noCmd )
@@ -167,7 +152,7 @@ update action m =
       Tick _ ->
         case m.mode of
           Automatic ->
-            ( m, performCmd StepOne )
+            ( stepOne m, noCmd )
 
           _ ->
             ( m, noCmd )
@@ -189,11 +174,24 @@ update action m =
         in
           ( { fresh | mode = mode }, noCmd )
 
--- there has to be something I am missing with the Task api,
--- this used to be `Effects.task (Task.succeed a)`
-performCmd : a -> Cmd a
-performCmd a =
-  Task.perform (\_ -> a) (\_ -> a) (Task.succeed a)
+stepOne : Model -> Model
+stepOne m =
+    let
+      next =
+        step m.world
+
+      continuingModel =
+        { m | world = next, previousWorld = Just m.world, round = m.round + 1 }
+    in
+      case m.previousWorld of
+        Nothing ->
+          continuingModel
+
+        Just prev ->
+          if prev /= next then
+            continuingModel
+          else
+            { m | mode = Complete }
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
