@@ -1,4 +1,4 @@
-module Game (step) where
+module Game exposing (step)
 
 import Matrix
 import Types exposing (..)

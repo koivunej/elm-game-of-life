@@ -1,20 +1,22 @@
-module GameOfLife (..) where
+module GameOfLife exposing (..)
 
 import Html exposing (Html)
+import Html.App as App
 import Html.Attributes exposing (value, type')
 import Html.Events
 import Matrix
 import Matrix.Random as RandomMatrix
 import Array exposing (Array)
-import StartApp
-import Effects exposing (Effects)
+import Platform.Cmd as Cmd exposing (Cmd)
 import Task
 import Time exposing (Time)
+import AnimationFrame
 import Random
-import ParseInt exposing (parseInt)
 import Types exposing (State(..))
 import Game exposing (step)
 import GameView exposing (gameView)
+import String
+import Json.Decode as Json
 
 
 type SimulationMode
@@ -33,7 +35,7 @@ type alias Model =
   }
 
 
-type Action
+type Msg
   = StepOne
   | Start
   | Stop
@@ -42,9 +44,9 @@ type Action
   | SeedInputChanged String
 
 
-init : ( Model, Effects Action )
+init : ( Model, Cmd Msg )
 init =
-  ( initialModel 42, Effects.none )
+  ( initialModel 42, Cmd.none )
 
 
 initialModel : Int -> Model
@@ -64,7 +66,7 @@ initialModel s =
 
 generateRandomWorld initialSeed =
   fst
-    <| Random.generate
+    <| Random.step
         (RandomMatrix.matrix
           (Random.int 25 25)
           (Random.int 25 25)
@@ -81,8 +83,8 @@ generateRandomWorld initialSeed =
         initialSeed
 
 
-view : Signal.Address Action -> Model -> Html
-view address m =
+view : Model -> Html Msg
+view m =
   Html.div
     []
     [ Html.dl
@@ -91,28 +93,28 @@ view address m =
         , Html.dd [] [ Html.text (toString m.round) ]
         ]
     , gameView m.world
-    , stepOneButton address m
-    , simulationButton address m
+    , stepOneButton m
+    , simulationButton m
     , Html.hr [] []
-    , Html.button [ Html.Events.onClick address Reset ] [ Html.text "Reset" ]
+    , Html.button [ Html.Events.onClick Reset ] [ Html.text "Reset" ]
     , Html.input
         [ (type' "number")
         , (value (toString (Maybe.withDefault m.seed m.seedInput)))
-        , Html.Events.on "input" Html.Events.targetValue (\input -> Signal.message address (SeedInputChanged input))
+        , Html.Events.on "input" (Json.map SeedInputChanged Html.Events.targetValue)
         ]
         []
     ]
 
 
-stepOneButton address model =
+stepOneButton model =
   Html.button
-    [ Html.Events.onClick address StepOne
+    [ Html.Events.onClick StepOne
     , Html.Attributes.disabled (model.mode /= Manual)
     ]
     [ Html.text "Step" ]
 
 
-simulationButton address model =
+simulationButton model =
   let
     ( action, text ) =
       case model.mode of
@@ -123,87 +125,84 @@ simulationButton address model =
           ( Stop, "Stop" )
   in
     Html.button
-      [ Html.Events.onClick address action
+      [ Html.Events.onClick action
       , Html.Attributes.disabled (model.mode == Complete)
       ]
       [ Html.text text ]
 
 
-update : Action -> Model -> ( Model, Effects Action )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update action m =
-  case action of
-    StepOne ->
-      -- note here we compare the new calculated to the one we had before
-      -- before we had A, current is B, and we check if A == C, where C = step B
-      -- this stops if the world has stabilized into flickering or fully stopped
-      let
-        next =
-          step m.world
+  let
+      noCmd = Cmd.none
+  in
+    case action of
+      StepOne ->
+        -- note here we compare the new calculated to the one we had before
+        -- before we had A, current is B, and we check if A == C, where C = step B
+        -- this stops if the world has stabilized into flickering or fully stopped
+        let
+          next =
+            step m.world
 
-        continuingModel =
-          { m | world = next, previousWorld = Just m.world, round = m.round + 1 }
-      in
-        case m.previousWorld of
-          Nothing ->
-            ( continuingModel, Effects.tick Tick )
+          continuingModel =
+            { m | world = next, previousWorld = Just m.world, round = m.round + 1 }
+        in
+          case m.previousWorld of
+            Nothing ->
+              ( continuingModel, noCmd )
 
-          Just prev ->
-            if prev /= next then
-              ( continuingModel, Effects.tick Tick )
+            Just prev ->
+              if prev /= next then
+                ( continuingModel, noCmd )
+              else
+                ( { m | mode = Complete }, noCmd )
+
+      Start ->
+        ( { m | mode = Automatic }, noCmd )
+
+      Stop ->
+        ( { m | mode = Manual }, noCmd )
+
+      Tick _ ->
+        case m.mode of
+          Automatic ->
+            ( m, performCmd StepOne )
+
+          _ ->
+            ( m, noCmd )
+
+      SeedInputChanged s ->
+        ( { m | seedInput = (Result.toMaybe (String.toInt s)) }, noCmd )
+
+      Reset ->
+        let
+          fresh =
+            initialModel (Maybe.withDefault m.seed m.seedInput)
+
+          mode =
+            if m.mode /= Complete then
+              m.mode
             else
-              ( { m | mode = Complete }, Effects.none )
+              Manual
 
-    Start ->
-      ( { m | mode = Automatic }, Effects.tick Tick )
+        in
+          ( { fresh | mode = mode }, noCmd )
 
-    Stop ->
-      ( { m | mode = Manual }, Effects.none )
+-- there has to be something I am missing with the Task api,
+-- this used to be `Effects.task (Task.succeed a)`
+performCmd : a -> Cmd a
+performCmd a =
+  Task.perform (\_ -> a) (\_ -> a) (Task.succeed a)
 
-    Tick _ ->
-      case m.mode of
-        Automatic ->
-          ( m, Effects.task (Task.succeed StepOne) )
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+  AnimationFrame.times Tick
 
-        _ ->
-          ( m, Effects.none )
-
-    SeedInputChanged s ->
-      ( { m | seedInput = (Result.toMaybe (parseInt s)) }, Effects.none )
-
-    Reset ->
-      let
-        fresh =
-          initialModel (Maybe.withDefault m.seed m.seedInput)
-
-        mode =
-          if m.mode /= Complete then
-            m.mode
-          else
-            Manual
-
-        fx =
-          if mode == Manual then
-            Effects.none
-          else
-            Effects.tick Tick
-      in
-        ( { fresh | mode = mode }, fx )
-
-
-app =
-  StartApp.start
+-- main : Program flags ?
+main =
+  App.program
     { init = init
     , update = update
     , view = view
-    , inputs = []
-    }
-
-
-port tasks : Signal.Signal (Task.Task Effects.Never ())
-port tasks =
-  app.tasks
-
-
-main : Signal.Signal Html
-main =
-  app.html
+    , subscriptions = subscriptions }

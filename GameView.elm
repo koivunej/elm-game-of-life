@@ -1,4 +1,4 @@
-module GameView (gameView) where
+module GameView exposing (gameView)
 
 import Html exposing (Html, Attribute)
 import Html.Attributes exposing (class, style)
@@ -7,7 +7,7 @@ import Types exposing (..)
 import Array exposing (..)
 
 
-gameView : Matrix State -> Html
+gameView : Matrix State -> Html a
 gameView world =
   Html.table
     [ class "gol-map" ]
@@ -17,17 +17,17 @@ gameView world =
     ]
 
 
-row : Array State -> Html
+row : Array State -> Html a
 row r =
   Html.tr [] (Array.toList (Array.map cell r))
 
 
-cell : State -> Html
+cell : State -> Html a
 cell c =
   Html.td [ cellStyle c ] [ Html.text " " ]
 
 
-cellStyle : State -> Attribute
+cellStyle : State -> Attribute a
 cellStyle s =
   case s of
     Alive ->
