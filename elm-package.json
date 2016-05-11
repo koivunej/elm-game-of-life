@@ -1,8 +1,8 @@
 {
-    "version": "1.0.0",
-    "summary": "helpful summary of your project, less than 80 characters",
-    "repository": "https://github.com/user/project.git",
-    "license": "BSD3",
+    "version": "0.2.0",
+    "summary": "a simple/sample of game of life in elm",
+    "repository": "https://github.com/koivunej/elm-game-of-life.git",
+    "license": "MIT",
     "source-directories": [
         "."
     ],
