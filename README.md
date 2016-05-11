@@ -22,3 +22,14 @@ Things I couldn't figure out
 I wanted to utilize `Time.fpsWhen` with controllable fps but couldn't realize how to control it with the current state.
 I ended up stepping and rendering everything on each tick after user has pressed the "Start" button.
 Building a controllable delay while operating on `requestAnimationFrame` or `Effects.tick` seemed too wasteful.
+
+Update after upgrading to elm-0.17
+----------------------------------
+
+`Effects.tick` has now been replaced with [elm-lang/animation-frame](https://github.com/elm-lang/animation-frame) (thanks @gdotdesign).
+Couldn't figure out a better way to keep using elm-matrix than to temporarily copy `Matrix.elm` and `Matrix/Random.elm` over due to the test dependencies not (yet) being provided as 0.17 versions.
+I guess other prettier choices could had been made, but me publishing a crate just for 0.17 support by removing test support would make even less sense.
+Hopefully the elm-matrix deps get updated soon.
+
+Elm-reactor no longer server raw html for some reason.
+Need to use `python -m SimpleHTTPServer` to serve html, css, and elm.js.
